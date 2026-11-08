@@ -1,0 +1,4 @@
+node_modules/
+pelis/
+*.mp4
+package-lock.json

@@ -28,40 +28,37 @@
     </div>
 
     <div class="nav-actions">
-      <!-- Estado discreto de señal -->
-      <div class="signal-badge" id="signalBadge" title="Estado del servidor multimedia">
-        <span class="status-dot" id="statusDot"></span>
-        <span id="statusText">Conectando...</span>
+      <!-- Estado de Señal del Servidor Rediseñado con Animación -->
+      <div class="signal-pill" id="signalBadge">
+        <span class="signal-ping-wrapper">
+          <span class="signal-ping" id="statusPing"></span>
+          <span class="signal-dot" id="statusDot"></span>
+        </span>
+        <span class="signal-label" id="statusText">Verificando señal...</span>
       </div>
 
-      <!-- Botón Modo Cine -->
-      <button class="btn-action" id="cinemaModeBtn" title="Apagar las luces">
-        <i class="fa-solid fa-couch"></i>
-        <span>Modo Cine</span>
-      </button>
-
-      <!-- Menú Superior Discreto (Ajustes de Servidor) -->
+      <!-- Acceso Ultra Discreto de Backend / Nodo Privado -->
       <div class="settings-wrapper">
-        <button class="btn-icon" id="menuToggleBtn" title="Ajustes de conexión">
-          <i class="fa-solid fa-sliders"></i>
+        <button class="btn-node" id="menuToggleBtn" title="Diagnóstico de nodo privado">
+          <i class="fa-solid fa-shield-halved"></i>
         </button>
 
         <div class="settings-dropdown" id="settingsDropdown">
-          <div class="dropdown-header">
-            <h4>Ajustes del Servidor Multimedia</h4>
-            <p>Actualiza la dirección de conexión privada cuando inicies una nueva sesión.</p>
+          <div class="dropdown-top">
+            <span class="node-tag"><i class="fa-solid fa-lock"></i> NODO MULTIMEDIA PRIVADO</span>
+            <span class="node-protocol">TLS · STREAM</span>
           </div>
           <div class="dropdown-body">
-            <label for="serverUrlInput">Dirección de enlace privado</label>
+            <label for="serverUrlInput">Endpoint de Origen (Backend Override)</label>
             <div class="input-group">
               <input type="password" id="serverUrlInput" placeholder="https://..." autocomplete="off">
-              <button type="button" class="btn-eye" id="toggleVisibilityBtn" title="Mostrar/Ocultar enlace">
+              <button type="button" class="btn-eye" id="toggleVisibilityBtn" title="Mostrar/Ocultar">
                 <i class="fa-regular fa-eye"></i>
               </button>
             </div>
             <div class="dropdown-actions">
-              <button class="btn-save" id="saveServerBtn">Guardar y Conectar</button>
-              <button class="btn-reset" id="resetServerBtn" title="Volver al enlace del código">Por defecto</button>
+              <button class="btn-save" id="saveServerBtn">Aplicar Nodo</button>
+              <button class="btn-reset" id="resetServerBtn" title="Restaurar endpoint del código">Default</button>
             </div>
             <span class="save-feedback" id="saveFeedback"></span>
           </div>
@@ -70,37 +67,107 @@
     </div>
   </header>
 
-  <!-- Contenedor Principal Widescreen -->
+  <!-- Contenedor Principal -->
   <main class="main-container">
 
-    <!-- Sección del Reproductor Principal -->
-    <section class="player-card" id="playerCard">
+    <!-- ===================================================================
+         1. GRAN PORTADA HERO ESTILO NETFLIX (PRIMERA VISTA)
+         =================================================================== -->
+    <section class="hero-stage" id="heroStage">
+      <div class="hero-card" id="heroCard">
+        <!-- Imagen de fondo de la película seleccionada -->
+        <div class="hero-backdrop" id="heroBackdrop"></div>
+        <div class="hero-vignette"></div>
+
+        <!-- Contenido de la Portada -->
+        <div class="hero-content">
+          <div class="hero-tags" id="heroTags">
+            <span class="tag-pill quality" id="heroQuality">FULL HD</span>
+            <span class="tag-dot">•</span>
+            <span class="tag-item" id="heroYear">2012</span>
+            <span class="tag-dot">•</span>
+            <span class="tag-item" id="heroDuration">142 min</span>
+            <span class="tag-dot">•</span>
+            <span class="tag-item" id="heroGenre">Ciencia Ficción · Acción</span>
+          </div>
+
+          <h2 class="hero-title" id="heroTitle">Los Juegos del Hambre</h2>
+          <p class="hero-desc" id="heroDesc"></p>
+
+          <!-- Botones estilo Netflix (Se adaptan a Laptop y Móvil) -->
+          <div class="hero-buttons">
+            <button class="btn-netflix-play" id="heroPlayBtn">
+              <i class="fa-solid fa-play"></i>
+              <span id="heroPlayText">Reproducir película</span>
+            </button>
+
+            <button class="btn-netflix-info" id="heroInfoBtn">
+              <i class="fa-solid fa-circle-info"></i>
+              <span>Sinopsis y detalles</span>
+            </button>
+          </div>
+
+          <!-- Indicador si ya tiene progreso guardado -->
+          <div class="hero-resume-bar" id="heroResumeBar">
+            <div class="resume-track">
+              <div class="resume-fill" id="heroResumeFill"></div>
+            </div>
+            <span class="resume-text" id="heroResumeText">Continuar viendo</span>
+          </div>
+        </div>
+
+        <!-- Etiqueta de esquina estilo Netflix -->
+        <div class="hero-corner-mood">
+          <i class="fa-solid fa-popcorn"></i>
+          <span>Función especial para dos ❤️</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================
+         2. SALA DE REPRODUCCIÓN (SE DESPLIEGA AL DAR REPRODUCIR)
+         =================================================================== -->
+    <section class="player-stage hidden" id="playerStage">
       <div class="video-wrapper show-controls" id="videoWrapper">
-        <!-- Video sin controles nativos ni opción de descarga -->
+
+        <!-- Video Principal (Sin controles nativos ni descargas) -->
         <video id="mainPlayer" preload="metadata" playsinline controlsList="nodownload nofullscreen noremoteplayback"
           disablePictureInPicture oncontextmenu="return false;">
           <source id="videoSource" src="" type="video/mp4">
-          Tu navegador no soporta streaming HTML5.
         </video>
 
-        <!-- Capa de Gestos Táctiles (Doble toque izquierda / derecha) -->
+        <!-- Video oculto silencioso para generar las miniaturas de escena en la barra -->
+        <video id=" thumbPreviewVideo" class="hidden-thumb-video" muted preload="metadata" playsinline></video>
+
+        <!-- Barra Superior Interna del Reproductor (Flecha Atrás + Título) -->
+        <div class="player-top-bar">
+          <button class="btn-back-arrow" id="backToHeroBtn" title="Volver a la portada">
+            <i class="fa-solid fa-arrow-left"></i>
+          </button>
+          <div class="player-top-meta">
+            <span class="playing-now-label">REPRODUCIENDO AHORA</span>
+            <h3 id="playerTopTitle">Los Juegos del Hambre</h3>
+          </div>
+        </div>
+
+        <!-- Capa Interactiva (Clic pausa en Laptop / Tap controles en Móvil / Doble tap ±10s) -->
         <div class="gesture-layer" id="gestureLayer">
           <div class="skip-ripple left" id="rippleLeft">
             <div class="skip-icon">
-              <i class="fa-solid fa-backward"></i>
-              <span id="skipLeftText">-10 seg</span>
+              <i class="fa-solid fa-rotate-left"></i>
+              <span id="skipLeftText">-10s</span>
             </div>
           </div>
 
           <div class="skip-ripple right" id="rippleRight">
             <div class="skip-icon">
-              <i class="fa-solid fa-forward"></i>
-              <span id="skipRightText">+10 seg</span>
+              <i class="fa-solid fa-rotate-right"></i>
+              <span id="skipRightText">+10s</span>
             </div>
           </div>
         </div>
 
-        <!-- ÚNICOS Controles de Reproducción y Salto (Sin duplicar abajo) -->
+        <!-- Controles Centrales (Visibles en Móvil para comodidad táctil) -->
         <div class="center-touch-controls" id="centerTouchControls">
           <button class="touch-circle-btn" id="touchRewindBtn" title="Retroceder 10s">
             <i class="fa-solid fa-rotate-left"></i>
@@ -117,83 +184,108 @@
           </button>
         </div>
 
-        <!-- Barra Inferior Limpia (Solo Progreso, Tiempo, Volumen y Pantalla Completa) -->
+        <!-- Barra Inferior Estilo Netflix (Controles abajo + Miniatura de escena) -->
         <div class="custom-controls" id="customControls">
+
+          <!-- Línea de Tiempo con Miniatura de Escena Flotante -->
           <div class="timeline-container" id="timelineContainer">
+            <div class="scene-preview-box" id="scenePreviewBox">
+              <div class="scene-thumb-frame">
+                <video id="scrubPreviewVideo" muted playsinline preload="metadata"></video>
+                <span class="scene-Fallback-icon"><i class="fa-solid fa-film"></i></span>
+              </div>
+              <span class="scene-time-badge" id="sceneTimeBadge">00:00</span>
+            </div>
+
             <div class="timeline-track">
               <div class="timeline-fill" id="timelineFill"></div>
               <div class="timeline-thumb" id="timelineThumb"></div>
             </div>
           </div>
 
+          <!-- Botones de Control Inferiores -->
           <div class="controls-row">
             <div class="controls-left">
+              <!-- Play / Pausa Inferior -->
+              <button class="ctrl-btn" id="bottomPlayBtn" title="Reproducir / Pausar">
+                <i class="fa-solid fa-play" id="bottomPlayIcon"></i>
+              </button>
+
+              <!-- Retroceder 10s Inferior -->
+              <button class="ctrl-btn skip-ten-btn" id="bottomRewindBtn" title="Retroceder 10 segundos">
+                <i class="fa-solid fa-rotate-left"></i>
+                <span class="ten-label">10</span>
+              </button>
+
+              <!-- Adelantar 10s Inferior -->
+              <button class="ctrl-btn skip-ten-btn" id="bottomForwardBtn" title="Adelantar 10 segundos">
+                <i class="fa-solid fa-rotate-right"></i>
+                <span class="ten-label">10</span>
+              </button>
+
+              <!-- Volumen Desplegable al Pasar el Mouse o Dar Tap -->
+              <div class="volume-drawer" id="volumeDrawer">
+                <button class="ctrl-btn" id="muteBtn" title="Volumen / Silenciar">
+                  <i class="fa-solid fa-volume-high" id="volumeIcon"></i>
+                </button>
+                <div class="volume-slider-wrap">
+                  <input type="range" class="volume-slider" id="volumeSlider" min="0" max="1" step="0.05" value="1">
+                </div>
+              </div>
+
+              <!-- Tiempo Actual / Duración -->
               <div class="time-display">
                 <span id="currentTimeEl">00:00</span>
                 <span class="time-sep">/</span>
                 <span id="durationEl">00:00</span>
               </div>
-
-              <div class="volume-box">
-                <button class="ctrl-btn" id="muteBtn" title="Silenciar / Sonido">
-                  <i class="fa-solid fa-volume-high" id="volumeIcon"></i>
-                </button>
-                <input type="range" class="volume-slider" id="volumeSlider" min="0" max="1" step="0.05" value="1">
-              </div>
             </div>
 
             <div class="controls-right">
-              <span class="fullscreen-title" id="fullscreenTitle"></span>
-              <button class="ctrl-btn" id="fullscreenBtn" title="Pantalla completa horizontal">
+              <button class="ctrl-btn" id="restartPlayerBtn" title="Reiniciar desde el principio">
+                <i class="fa-solid fa-backward-step"></i>
+              </button>
+              <button class="ctrl-btn" id="fullscreenBtn" title="Pantalla completa">
                 <i class="fa-solid fa-expand" id="fullscreenIcon"></i>
               </button>
             </div>
           </div>
         </div>
 
-        <!-- Pantalla privada cuando el servidor multimedia no responde -->
+        <!-- Pantalla Rediseñada cuando el Servidor Multimedia está en Espera -->
         <div class="offline-overlay" id="offlineOverlay">
-          <div class="offline-content">
-            <div class="offline-spinner">
+          <div class="offline-card">
+            <div class="offline-radar">
+              <span class="radar-ring r1"></span>
+              <span class="radar-ring r2"></span>
               <i class="fa-solid fa-satellite-dish"></i>
             </div>
-            <h3>Esperando servidor multimedia...</h3>
-            <p>La sala está lista, pero el servidor privado de películas no está transmitiendo en este momento.</p>
-            <button class="btn-retry" id="retryBtn">
-              <i class="fa-solid fa-rotate-right"></i> Reintentar conexión
-            </button>
+            <span class="offline-tag">CONEXIÓN EN ESPERA</span>
+            <h3>Servidor multimedia fuera de línea</h3>
+            <p>La sala de cine está lista, pero la transmisión privada aún no ha iniciado. Intenta reconectar en unos
+              segundos.</p>
+            <div class="offline-actions">
+              <button class="btn-retry" id="retryBtn">
+                <i class="fa-solid fa-rotate-right"></i> Reintentar conexión
+              </button>
+              <button class="btn-offline-back" id="offlineBackBtn">
+                Volver a la portada
+              </button>
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- Información de la película en reproducción -->
-      <div class="info-bar">
-        <div class="info-main">
-          <div class="info-badges">
-            <span class="badge-quality" id="currentQuality">FULL HD</span>
-            <span class="badge-meta" id="currentYear">2012</span>
-            <span class="badge-meta" id="currentDuration">-- min</span>
-            <span class="badge-genre" id="currentGenre">Ciencia Ficción</span>
-          </div>
-          <h2 id="currentTitle">Cargando...</h2>
-          <p id="currentDesc">Selecciona una película del catálogo para comenzar la función.</p>
-        </div>
-
-        <div class="info-side">
-          <button class="btn-restart" id="restartMovieBtn" title="Reiniciar desde el principio">
-            <i class="fa-solid fa-backward-step"></i> Desde el inicio
-          </button>
-        </div>
       </div>
     </section>
 
-    <!-- Catálogo de Películas con Avance en Vivo -->
+    <!-- ===================================================================
+         3. CATÁLOGO DE PELÍCULAS (NUESTRA CARTELERA G&V ❤️)
+         =================================================================== -->
     <section class="catalog-section">
       <div class="catalog-header">
         <div>
           <h3 class="catalog-title">Nuestra Cartelera G&V ❤️</h3>
-          <p class="catalog-subtitle">Pasa el cursor o toca "Trailer" en cada póster para ver un avance y la sinopsis
-          </p>
+          <p class="catalog-subtitle">Historias elegidas especialmente para nuestras noches de cine juntos</p>
         </div>
         <span class="catalog-count" id="catalogCount">5 películas</span>
       </div>
@@ -202,6 +294,66 @@
     </section>
 
   </main>
+
+  <!-- ===================================================================
+       4. MODAL ANIMADO DE SINOPSIS Y DETALLES DE LA PELÍCULA
+       =================================================================== -->
+  <div class="synopsis-modal-backdrop" id="synopsisModal">
+    <div class="synopsis-modal-card">
+      <button class="modal-close-btn" id="closeModalBtn" title="Cerrar">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <div class="modal-layout">
+        <div class="modal-poster-wrap">
+          <img id="modalPoster" src="" alt="Póster">
+          <span class="modal-quality-badge" id="modalQuality">FULL HD</span>
+        </div>
+
+        <div class="modal-info-wrap">
+          <div class="modal-meta-pills">
+            <span id="modalYear">2012</span>
+            <span>•</span>
+            <span id="modalDuration">142 min</span>
+            <span>•</span>
+            <span id="modalGenre">Ciencia Ficción</span>
+          </div>
+
+          <h3 class="modal-title" id="modalTitle">Título de la película</h3>
+          <p class="modal-desc" id="modalDesc">Sinopsis completa...</p>
+
+          <div class="modal-progress-info" id="modalProgressBox">
+            <div class="modal-progress-bar">
+              <div class="modal-progress-fill" id="modalProgressFill"></div>
+            </div>
+            <span id="modalProgressText">Progreso guardado: 0%</span>
+          </div>
+
+          <div class="modal-actions">
+            <button class="btn-netflix-play" id="modalPlayBtn">
+              <i class="fa-solid fa-play"></i> Ver película ahora
+            </button>
+            <button class="btn-modal-restart" id="modalRestartBtn">
+              <i class="fa-solid fa-rotate-left"></i> Reiniciar desde cero
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================
+       5. FOOTER DEDICADO ESPECIALMENTE
+       =================================================================== -->
+  <footer class="love-footer">
+    <div class="footer-divider"></div>
+    <p class="footer-dedication">
+      Con especial dedicación para <strong>MI Chapaita</strong>, espero disfrutes Nuestro Rincón de Pelis ❤️
+    </p>
+    <p class="footer-signature">
+      Hecho con amor por <span>BRØKØ_03 🥦</span>
+    </p>
+  </footer>
 
   <script src="script.js"></script>
 </body>

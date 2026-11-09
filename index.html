@@ -70,7 +70,7 @@
     </div>
   </header>
 
-  <!-- Contenedor Principal -->
+  <!-- Contenedor Principal Widescreen -->
   <main class="main-container">
 
     <!-- Sección del Reproductor Principal -->
@@ -100,7 +100,7 @@
           </div>
         </div>
 
-        <!-- Controles Centrales Táctiles -->
+        <!-- ÚNICOS Controles de Reproducción y Salto (Sin duplicar abajo) -->
         <div class="center-touch-controls" id="centerTouchControls">
           <button class="touch-circle-btn" id="touchRewindBtn" title="Retroceder 10s">
             <i class="fa-solid fa-rotate-left"></i>
@@ -117,9 +117,8 @@
           </button>
         </div>
 
-        <!-- Barra de Controles Propia (Sin menú de descarga) -->
+        <!-- Barra Inferior Limpia (Solo Progreso, Tiempo, Volumen y Pantalla Completa) -->
         <div class="custom-controls" id="customControls">
-          <!-- Línea de tiempo interactiva -->
           <div class="timeline-container" id="timelineContainer">
             <div class="timeline-track">
               <div class="timeline-fill" id="timelineFill"></div>
@@ -127,18 +126,13 @@
             </div>
           </div>
 
-          <!-- Botones inferiores -->
           <div class="controls-row">
             <div class="controls-left">
-              <button class="ctrl-btn" id="playPauseBtn" title="Reproducir / Pausar">
-                <i class="fa-solid fa-play" id="bottomPlayIcon"></i>
-              </button>
-              <button class="ctrl-btn" id="skipBackBtn" title="Retroceder 10s">
-                <i class="fa-solid fa-rotate-left"></i>
-              </button>
-              <button class="ctrl-btn" id="skipFwdBtn" title="Adelantar 10s">
-                <i class="fa-solid fa-rotate-right"></i>
-              </button>
+              <div class="time-display">
+                <span id="currentTimeEl">00:00</span>
+                <span class="time-sep">/</span>
+                <span id="durationEl">00:00</span>
+              </div>
 
               <div class="volume-box">
                 <button class="ctrl-btn" id="muteBtn" title="Silenciar / Sonido">
@@ -146,17 +140,11 @@
                 </button>
                 <input type="range" class="volume-slider" id="volumeSlider" min="0" max="1" step="0.05" value="1">
               </div>
-
-              <div class="time-display">
-                <span id="currentTimeEl">00:00</span>
-                <span class="time-sep">/</span>
-                <span id="durationEl">00:00</span>
-              </div>
             </div>
 
             <div class="controls-right">
               <span class="fullscreen-title" id="fullscreenTitle"></span>
-              <button class="ctrl-btn" id="fullscreenBtn" title="Pantalla completa">
+              <button class="ctrl-btn" id="fullscreenBtn" title="Pantalla completa horizontal">
                 <i class="fa-solid fa-expand" id="fullscreenIcon"></i>
               </button>
             </div>
@@ -183,9 +171,9 @@
         <div class="info-main">
           <div class="info-badges">
             <span class="badge-quality" id="currentQuality">FULL HD</span>
-            <span class="badge-meta" id="currentYear">2024</span>
+            <span class="badge-meta" id="currentYear">2012</span>
             <span class="badge-meta" id="currentDuration">-- min</span>
-            <span class="badge-genre" id="currentGenre">Cine en Pareja</span>
+            <span class="badge-genre" id="currentGenre">Ciencia Ficción</span>
           </div>
           <h2 id="currentTitle">Cargando...</h2>
           <p id="currentDesc">Selecciona una película del catálogo para comenzar la función.</p>
@@ -199,12 +187,13 @@
       </div>
     </section>
 
-    <!-- Catálogo de Películas -->
+    <!-- Catálogo de Películas con Avance en Vivo -->
     <section class="catalog-section">
       <div class="catalog-header">
         <div>
           <h3 class="catalog-title">Nuestra Cartelera</h3>
-          <p class="catalog-subtitle">El progreso se guarda automáticamente en cada película</p>
+          <p class="catalog-subtitle">Pasa el cursor o toca "Trailer" en cada póster para ver un avance y la sinopsis
+          </p>
         </div>
         <span class="catalog-count" id="catalogCount">5 películas</span>
       </div>

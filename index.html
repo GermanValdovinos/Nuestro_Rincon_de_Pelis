@@ -1,37 +1,220 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Nuestro Rincón de Pelis ❤️</title>
+  <!-- Fuentes e Iconos -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
-  <header>
-    <h1>NUESTRO RINCÓN DE PELIS ❤️</h1>
+  <!-- Resplandor ambiental dinámico de fondo -->
+  <div class="ambient-glow" id="ambientGlow"></div>
+
+  <!-- Barra Superior -->
+  <header class="navbar">
+    <div class="nav-brand">
+      <span class="brand-icon"><i class="fa-solid fa-film"></i></span>
+      <h1>NUESTRO RINCÓN DE PELIS <span class="heart">❤️</span></h1>
+    </div>
+
+    <div class="nav-actions">
+      <!-- Estado discreto de señal -->
+      <div class="signal-badge" id="signalBadge" title="Estado del servidor multimedia">
+        <span class="status-dot" id="statusDot"></span>
+        <span id="statusText">Conectando...</span>
+      </div>
+
+      <!-- Botón Modo Cine -->
+      <button class="btn-action" id="cinemaModeBtn" title="Apagar las luces">
+        <i class="fa-solid fa-couch"></i>
+        <span>Modo Cine</span>
+      </button>
+
+      <!-- Menú Superior Discreto (Ajustes de Servidor) -->
+      <div class="settings-wrapper">
+        <button class="btn-icon" id="menuToggleBtn" title="Ajustes de conexión">
+          <i class="fa-solid fa-sliders"></i>
+        </button>
+
+        <div class="settings-dropdown" id="settingsDropdown">
+          <div class="dropdown-header">
+            <h4>Ajustes del Servidor Multimedia</h4>
+            <p>Actualiza la dirección de conexión privada cuando inicies una nueva sesión.</p>
+          </div>
+          <div class="dropdown-body">
+            <label for="serverUrlInput">Dirección de enlace privado</label>
+            <div class="input-group">
+              <input type="password" id="serverUrlInput" placeholder="https://..." autocomplete="off">
+              <button type="button" class="btn-eye" id="toggleVisibilityBtn" title="Mostrar/Ocultar enlace">
+                <i class="fa-regular fa-eye"></i>
+              </button>
+            </div>
+            <div class="dropdown-actions">
+              <button class="btn-save" id="saveServerBtn">Guardar y Conectar</button>
+              <button class="btn-reset" id="resetServerBtn" title="Volver al enlace del código">Por defecto</button>
+            </div>
+            <span class="save-feedback" id="saveFeedback"></span>
+          </div>
+        </div>
+      </div>
+    </div>
   </header>
 
+  <!-- Contenedor Principal -->
   <main class="main-container">
-    <!-- Reproductor Principal -->
-    <section class="player-card">
-      <video id="mainPlayer" controls preload="metadata">
-        <source id="videoSource" src="" type="video/mp4">
-        Tu navegador no soporta streaming HTML5.
-      </video>
+
+    <!-- Sección del Reproductor Principal -->
+    <section class="player-card" id="playerCard">
+      <div class="video-wrapper show-controls" id="videoWrapper">
+        <!-- Video sin controles nativos ni opción de descarga -->
+        <video id="mainPlayer" preload="metadata" playsinline controlsList="nodownload nofullscreen noremoteplayback"
+          disablePictureInPicture oncontextmenu="return false;">
+          <source id="videoSource" src="" type="video/mp4">
+          Tu navegador no soporta streaming HTML5.
+        </video>
+
+        <!-- Capa de Gestos Táctiles (Doble toque izquierda / derecha) -->
+        <div class="gesture-layer" id="gestureLayer">
+          <div class="skip-ripple left" id="rippleLeft">
+            <div class="skip-icon">
+              <i class="fa-solid fa-backward"></i>
+              <span id="skipLeftText">-10 seg</span>
+            </div>
+          </div>
+
+          <div class="skip-ripple right" id="rippleRight">
+            <div class="skip-icon">
+              <i class="fa-solid fa-forward"></i>
+              <span id="skipRightText">+10 seg</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Controles Centrales Táctiles -->
+        <div class="center-touch-controls" id="centerTouchControls">
+          <button class="touch-circle-btn" id="touchRewindBtn" title="Retroceder 10s">
+            <i class="fa-solid fa-rotate-left"></i>
+            <span>10</span>
+          </button>
+
+          <button class="touch-circle-btn main-play" id="touchPlayBtn" title="Reproducir / Pausar">
+            <i class="fa-solid fa-play" id="centerPlayIcon"></i>
+          </button>
+
+          <button class="touch-circle-btn" id="touchForwardBtn" title="Adelantar 10s">
+            <i class="fa-solid fa-rotate-right"></i>
+            <span>10</span>
+          </button>
+        </div>
+
+        <!-- Barra de Controles Propia (Sin menú de descarga) -->
+        <div class="custom-controls" id="customControls">
+          <!-- Línea de tiempo interactiva -->
+          <div class="timeline-container" id="timelineContainer">
+            <div class="timeline-track">
+              <div class="timeline-fill" id="timelineFill"></div>
+              <div class="timeline-thumb" id="timelineThumb"></div>
+            </div>
+          </div>
+
+          <!-- Botones inferiores -->
+          <div class="controls-row">
+            <div class="controls-left">
+              <button class="ctrl-btn" id="playPauseBtn" title="Reproducir / Pausar">
+                <i class="fa-solid fa-play" id="bottomPlayIcon"></i>
+              </button>
+              <button class="ctrl-btn" id="skipBackBtn" title="Retroceder 10s">
+                <i class="fa-solid fa-rotate-left"></i>
+              </button>
+              <button class="ctrl-btn" id="skipFwdBtn" title="Adelantar 10s">
+                <i class="fa-solid fa-rotate-right"></i>
+              </button>
+
+              <div class="volume-box">
+                <button class="ctrl-btn" id="muteBtn" title="Silenciar / Sonido">
+                  <i class="fa-solid fa-volume-high" id="volumeIcon"></i>
+                </button>
+                <input type="range" class="volume-slider" id="volumeSlider" min="0" max="1" step="0.05" value="1">
+              </div>
+
+              <div class="time-display">
+                <span id="currentTimeEl">00:00</span>
+                <span class="time-sep">/</span>
+                <span id="durationEl">00:00</span>
+              </div>
+            </div>
+
+            <div class="controls-right">
+              <span class="fullscreen-title" id="fullscreenTitle"></span>
+              <button class="ctrl-btn" id="fullscreenBtn" title="Pantalla completa">
+                <i class="fa-solid fa-expand" id="fullscreenIcon"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pantalla privada cuando el servidor multimedia no responde -->
+        <div class="offline-overlay" id="offlineOverlay">
+          <div class="offline-content">
+            <div class="offline-spinner">
+              <i class="fa-solid fa-satellite-dish"></i>
+            </div>
+            <h3>Esperando servidor multimedia...</h3>
+            <p>La sala está lista, pero el servidor privado de películas no está transmitiendo en este momento.</p>
+            <button class="btn-retry" id="retryBtn">
+              <i class="fa-solid fa-rotate-right"></i> Reintentar conexión
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Información de la película en reproducción -->
       <div class="info-bar">
-        <h2 id="currentTitle">Cargando...</h2>
-        <p id="currentDesc">Selecciona una película para reproducir.</p>
+        <div class="info-main">
+          <div class="info-badges">
+            <span class="badge-quality" id="currentQuality">FULL HD</span>
+            <span class="badge-meta" id="currentYear">2024</span>
+            <span class="badge-meta" id="currentDuration">-- min</span>
+            <span class="badge-genre" id="currentGenre">Cine en Pareja</span>
+          </div>
+          <h2 id="currentTitle">Cargando...</h2>
+          <p id="currentDesc">Selecciona una película del catálogo para comenzar la función.</p>
+        </div>
+
+        <div class="info-side">
+          <button class="btn-restart" id="restartMovieBtn" title="Reiniciar desde el principio">
+            <i class="fa-solid fa-backward-step"></i> Desde el inicio
+          </button>
+        </div>
       </div>
     </section>
 
     <!-- Catálogo de Películas -->
     <section class="catalog-section">
-      <h3 class="catalog-title">Películas disponibles</h3>
+      <div class="catalog-header">
+        <div>
+          <h3 class="catalog-title">Nuestra Cartelera</h3>
+          <p class="catalog-subtitle">El progreso se guarda automáticamente en cada película</p>
+        </div>
+        <span class="catalog-count" id="catalogCount">5 películas</span>
+      </div>
+
       <div class="movies-grid" id="moviesList"></div>
     </section>
+
   </main>
 
   <script src="script.js"></script>
 </body>
+
 </html>

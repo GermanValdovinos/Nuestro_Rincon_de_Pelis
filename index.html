@@ -20,7 +20,7 @@
   <!-- Resplandor ambiental dinámico de fondo -->
   <div class="ambient-glow" id="ambientGlow"></div>
 
-  <!-- Barra Superior -->
+  <!-- Barra Superior Limpia (Sin botones técnicos expuestos) -->
   <header class="navbar">
     <div class="nav-brand">
       <span class="brand-icon"><i class="fa-solid fa-film"></i></span>
@@ -28,41 +28,13 @@
     </div>
 
     <div class="nav-actions">
-      <!-- Estado de Señal del Servidor Rediseñado con Animación -->
-      <div class="signal-pill" id="signalBadge">
+      <!-- Estado de Señal del Servidor en Tiempo Real -->
+      <div class="signal-pill" id="signalBadge" title="Estado del servidor multimedia">
         <span class="signal-ping-wrapper">
           <span class="signal-ping" id="statusPing"></span>
           <span class="signal-dot" id="statusDot"></span>
         </span>
-        <span class="signal-label" id="statusText">Verificando señal...</span>
-      </div>
-
-      <!-- Acceso Ultra Discreto de Backend / Nodo Privado -->
-      <div class="settings-wrapper">
-        <button class="btn-node" id="menuToggleBtn" title="Diagnóstico de nodo privado">
-          <i class="fa-solid fa-shield-halved"></i>
-        </button>
-
-        <div class="settings-dropdown" id="settingsDropdown">
-          <div class="dropdown-top">
-            <span class="node-tag"><i class="fa-solid fa-lock"></i> NODO MULTIMEDIA PRIVADO</span>
-            <span class="node-protocol">TLS · STREAM</span>
-          </div>
-          <div class="dropdown-body">
-            <label for="serverUrlInput">Endpoint de Origen (Backend Override)</label>
-            <div class="input-group">
-              <input type="password" id="serverUrlInput" placeholder="https://..." autocomplete="off">
-              <button type="button" class="btn-eye" id="toggleVisibilityBtn" title="Mostrar/Ocultar">
-                <i class="fa-regular fa-eye"></i>
-              </button>
-            </div>
-            <div class="dropdown-actions">
-              <button class="btn-save" id="saveServerBtn">Aplicar Nodo</button>
-              <button class="btn-reset" id="resetServerBtn" title="Restaurar endpoint del código">Default</button>
-            </div>
-            <span class="save-feedback" id="saveFeedback"></span>
-          </div>
-        </div>
+        <span class="signal-label" id="statusText">Conectando...</span>
       </div>
     </div>
   </header>
@@ -71,11 +43,11 @@
   <main class="main-container">
 
     <!-- ===================================================================
-         1. GRAN PORTADA HERO ESTILO NETFLIX (PRIMERA VISTA)
+         1. GRAN PORTADA HERO ESTILO NETFLIX (MÁS GRANDE E IMPONENTE)
          =================================================================== -->
     <section class="hero-stage" id="heroStage">
       <div class="hero-card" id="heroCard">
-        <!-- Imagen de fondo de la película seleccionada -->
+        <!-- Imagen de fondo de la película activa -->
         <div class="hero-backdrop" id="heroBackdrop"></div>
         <div class="hero-vignette"></div>
 
@@ -87,14 +59,14 @@
             <span class="tag-item" id="heroYear">2012</span>
             <span class="tag-dot">•</span>
             <span class="tag-item" id="heroDuration">142 min</span>
-            <span class="tag-dot">•</span>
-            <span class="tag-item" id="heroGenre">Ciencia Ficción · Acción</span>
           </div>
+
+          <div class="hero-genre-line" id="heroGenre">Ciencia Ficción · Acción · Aventura</div>
 
           <h2 class="hero-title" id="heroTitle">Los Juegos del Hambre</h2>
           <p class="hero-desc" id="heroDesc"></p>
 
-          <!-- Botones estilo Netflix (Se adaptan a Laptop y Móvil) -->
+          <!-- Botones estilo Netflix -->
           <div class="hero-buttons">
             <button class="btn-netflix-play" id="heroPlayBtn">
               <i class="fa-solid fa-play"></i>
@@ -118,26 +90,23 @@
 
         <!-- Etiqueta de esquina estilo Netflix -->
         <div class="hero-corner-mood">
-          <i class="fa-solid fa-popcorn"></i>
-          <span>Función especial para dos ❤️</span>
+          <i class="fa-solid fa-heart"></i>
+          <span>Función privada G&V</span>
         </div>
       </div>
     </section>
 
     <!-- ===================================================================
-         2. SALA DE REPRODUCCIÓN (SE DESPLIEGA AL DAR REPRODUCIR)
+         2. SALA DE REPRODUCCIÓN (CONTROLES ÚNICOS ABAJO + GESTOS)
          =================================================================== -->
     <section class="player-stage hidden" id="playerStage">
       <div class="video-wrapper show-controls" id="videoWrapper">
 
-        <!-- Video Principal (Sin controles nativos ni descargas) -->
+        <!-- Video Principal (Precarga activa para validar el servidor al instante) -->
         <video id="mainPlayer" preload="metadata" playsinline controlsList="nodownload nofullscreen noremoteplayback"
           disablePictureInPicture oncontextmenu="return false;">
           <source id="videoSource" src="" type="video/mp4">
         </video>
-
-        <!-- Video oculto silencioso para generar las miniaturas de escena en la barra -->
-        <video id=" thumbPreviewVideo" class="hidden-thumb-video" muted preload="metadata" playsinline></video>
 
         <!-- Barra Superior Interna del Reproductor (Flecha Atrás + Título) -->
         <div class="player-top-bar">
@@ -150,7 +119,7 @@
           </div>
         </div>
 
-        <!-- Capa Interactiva (Clic pausa en Laptop / Tap controles en Móvil / Doble tap ±10s) -->
+        <!-- Capa Interactiva (Tap en Móvil muestra controles 8s / Clic en Laptop pausa / Doble toque ±10s) -->
         <div class="gesture-layer" id="gestureLayer">
           <div class="skip-ripple left" id="rippleLeft">
             <div class="skip-icon">
@@ -167,24 +136,7 @@
           </div>
         </div>
 
-        <!-- Controles Centrales (Visibles en Móvil para comodidad táctil) -->
-        <div class="center-touch-controls" id="centerTouchControls">
-          <button class="touch-circle-btn" id="touchRewindBtn" title="Retroceder 10s">
-            <i class="fa-solid fa-rotate-left"></i>
-            <span>10</span>
-          </button>
-
-          <button class="touch-circle-btn main-play" id="touchPlayBtn" title="Reproducir / Pausar">
-            <i class="fa-solid fa-play" id="centerPlayIcon"></i>
-          </button>
-
-          <button class="touch-circle-btn" id="touchForwardBtn" title="Adelantar 10s">
-            <i class="fa-solid fa-rotate-right"></i>
-            <span>10</span>
-          </button>
-        </div>
-
-        <!-- Barra Inferior Estilo Netflix (Controles abajo + Miniatura de escena) -->
+        <!-- ÚNICA Barra de Controles Inferior (Sin botones centrales redundantes) -->
         <div class="custom-controls" id="customControls">
 
           <!-- Línea de Tiempo con Miniatura de Escena Flotante -->
@@ -192,7 +144,7 @@
             <div class="scene-preview-box" id="scenePreviewBox">
               <div class="scene-thumb-frame">
                 <video id="scrubPreviewVideo" muted playsinline preload="metadata"></video>
-                <span class="scene-Fallback-icon"><i class="fa-solid fa-film"></i></span>
+                <span class="scene-fallback-icon"><i class="fa-solid fa-film"></i></span>
               </div>
               <span class="scene-time-badge" id="sceneTimeBadge">00:00</span>
             </div>
@@ -206,18 +158,18 @@
           <!-- Botones de Control Inferiores -->
           <div class="controls-row">
             <div class="controls-left">
-              <!-- Play / Pausa Inferior -->
+              <!-- Play / Pausa -->
               <button class="ctrl-btn" id="bottomPlayBtn" title="Reproducir / Pausar">
                 <i class="fa-solid fa-play" id="bottomPlayIcon"></i>
               </button>
 
-              <!-- Retroceder 10s Inferior -->
+              <!-- Retroceder 10s -->
               <button class="ctrl-btn skip-ten-btn" id="bottomRewindBtn" title="Retroceder 10 segundos">
                 <i class="fa-solid fa-rotate-left"></i>
                 <span class="ten-label">10</span>
               </button>
 
-              <!-- Adelantar 10s Inferior -->
+              <!-- Adelantar 10s -->
               <button class="ctrl-btn skip-ten-btn" id="bottomForwardBtn" title="Adelantar 10 segundos">
                 <i class="fa-solid fa-rotate-right"></i>
                 <span class="ten-label">10</span>
@@ -242,7 +194,7 @@
             </div>
 
             <div class="controls-right">
-              <button class="ctrl-btn" id="restartPlayerBtn" title="Reiniciar desde el principio">
+              <button class="ctrl-btn hidden" id="restartPlayerBtn" title="Reiniciar desde el principio">
                 <i class="fa-solid fa-backward-step"></i>
               </button>
               <button class="ctrl-btn" id="fullscreenBtn" title="Pantalla completa">
@@ -252,7 +204,7 @@
           </div>
         </div>
 
-        <!-- Pantalla Rediseñada cuando el Servidor Multimedia está en Espera -->
+        <!-- Pantalla cuando el Servidor Multimedia está Fuera de Línea -->
         <div class="offline-overlay" id="offlineOverlay">
           <div class="offline-card">
             <div class="offline-radar">
@@ -296,7 +248,7 @@
   </main>
 
   <!-- ===================================================================
-       4. MODAL ANIMADO DE SINOPSIS Y DETALLES DE LA PELÍCULA
+       4. MODAL ANIMADO DE SINOPSIS Y DETALLES (CON VALIDACIÓN DE PROGRESO)
        =================================================================== -->
   <div class="synopsis-modal-backdrop" id="synopsisModal">
     <div class="synopsis-modal-card">
@@ -315,9 +267,8 @@
             <span id="modalYear">2012</span>
             <span>•</span>
             <span id="modalDuration">142 min</span>
-            <span>•</span>
-            <span id="modalGenre">Ciencia Ficción</span>
           </div>
+          <div class="modal-genre-text" id="modalGenre">Ciencia Ficción · Acción · Aventura</div>
 
           <h3 class="modal-title" id="modalTitle">Título de la película</h3>
           <p class="modal-desc" id="modalDesc">Sinopsis completa...</p>
@@ -326,14 +277,16 @@
             <div class="modal-progress-bar">
               <div class="modal-progress-fill" id="modalProgressFill"></div>
             </div>
-            <span id="modalProgressText">Progreso guardado: 0%</span>
+            <span id="modalProgressText">Aún no has comenzado esta película</span>
           </div>
 
           <div class="modal-actions">
             <button class="btn-netflix-play" id="modalPlayBtn">
-              <i class="fa-solid fa-play"></i> Ver película ahora
+              <i class="fa-solid fa-play"></i>
+              <span id="modalPlayBtnText">Ver película ahora</span>
             </button>
-            <button class="btn-modal-restart" id="modalRestartBtn">
+            <!-- Solo se muestra si la película ya fue empezada -->
+            <button class="btn-modal-restart hidden" id="modalRestartBtn">
               <i class="fa-solid fa-rotate-left"></i> Reiniciar desde cero
             </button>
           </div>
@@ -343,7 +296,40 @@
   </div>
 
   <!-- ===================================================================
-       5. FOOTER DEDICADO ESPECIALMENTE
+       5. CONSOLA PROPIETARIA OCULTA (SE ABRE CON 5 TOQUES EN "BRØKØ_03 🥦")
+       =================================================================== -->
+  <div class="owner-modal-backdrop" id="ownerModal">
+    <div class="owner-modal-card">
+      <div class="owner-modal-header">
+        <div class="owner-badge">
+          <i class="fa-solid fa-terminal"></i>
+          <span>BRØKØ_03 MEDIA CORE</span>
+        </div>
+        <button class="owner-close-btn" id="closeOwnerModalBtn" title="Cerrar">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <p class="owner-subtitle">Panel de administración exclusivo del creador · Nuestro Rincón de Pelis</p>
+
+      <div class="owner-body">
+        <label for="serverUrlInput">Servidor de Streaming Activo</label>
+        <div class="input-group">
+          <input type="password" id="serverUrlInput" placeholder="https://..." autocomplete="off">
+          <button type="button" class="btn-eye" id="toggleVisibilityBtn" title="Mostrar/Ocultar">
+            <i class="fa-regular fa-eye"></i>
+          </button>
+        </div>
+        <div class="dropdown-actions">
+          <button class="btn-save" id="saveServerBtn">Sincronizar Servidor</button>
+          <button class="btn-reset" id="resetServerBtn" title="Restaurar del código">Por defecto</button>
+        </div>
+        <span class="save-feedback" id="saveFeedback"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================
+       6. FOOTER DEDICADO ESPECIALMENTE
        =================================================================== -->
   <footer class="love-footer">
     <div class="footer-divider"></div>
@@ -351,7 +337,7 @@
       Con especial dedicación para <strong>MI Chapaita</strong>, espero disfrutes Nuestro Rincón de Pelis ❤️
     </p>
     <p class="footer-signature">
-      Hecho con amor por <span>BRØKØ_03 🥦</span>
+      Hecho con amor por <span id="secretOwnerTrigger" title="Creador">BRØKØ_03 🥦</span>
     </p>
   </footer>
 

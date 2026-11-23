@@ -110,15 +110,17 @@ const heroResumeText = document.getElementById('heroResumeText');
 const videoWrapper = document.getElementById('videoWrapper');
 const player = document.getElementById('mainPlayer');
 const videoSource = document.getElementById('videoSource');
+const playerTopBar = document.getElementById('playerTopBar');
 const backToHeroBtn = document.getElementById('backToHeroBtn');
 const playerTopTitle = document.getElementById('playerTopTitle');
 
-// Gestos y Barra Inferior Única
+// Gestos y Barra Inferior
 const gestureLayer = document.getElementById('gestureLayer');
 const rippleLeft = document.getElementById('rippleLeft');
 const rippleRight = document.getElementById('rippleRight');
 const skipLeftText = document.getElementById('skipLeftText');
 const skipRightText = document.getElementById('skipRightText');
+const customControls = document.getElementById('customControls');
 const bottomPlayBtn = document.getElementById('bottomPlayBtn');
 const bottomPlayIcon = document.getElementById('bottomPlayIcon');
 const bottomRewindBtn = document.getElementById('bottomRewindBtn');
@@ -129,7 +131,6 @@ const volumeIcon = document.getElementById('volumeIcon');
 const volumeSlider = document.getElementById('volumeSlider');
 const currentTimeEl = document.getElementById('currentTimeEl');
 const durationEl = document.getElementById('durationEl');
-const restartPlayerBtn = document.getElementById('restartPlayerBtn');
 const fullscreenBtn = document.getElementById('fullscreenBtn');
 const fullscreenIcon = document.getElementById('fullscreenIcon');
 
@@ -174,13 +175,16 @@ const modalProgressFill = document.getElementById('modalProgressFill');
 const modalProgressText = document.getElementById('modalProgressText');
 const modalPlayBtn = document.getElementById('modalPlayBtn');
 const modalPlayBtnText = document.getElementById('modalPlayBtnText');
-const modalRestartBtn = document.getElementById('modalRestartBtn');
 
 let activeMovie = movies[0];
 let modalMovie = null;
 let controlsTimeout = null;
+let controlsJustOpenedAt = 0;
 let isForcedLandscape = false;
 let lastPreviewSeek = 0;
+let serverPollTimer = null;
+let isCheckingServer = false;
+let currentServerState = 'connecting';
 
 // =========================================================================
 // 4. DETECCIÓN DE MÓVIL, PROGRESO Y ÚLTIMA PELÍCULA VISTA
@@ -190,14 +194,12 @@ function isMobileDevice() {
     /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 }
 
-// Verifica si la película realmente tiene progreso guardado
 function hasMovieProgress(movieId) {
   const savedTime = parseFloat(localStorage.getItem(`movie_time_${movieId}`)) || 0;
   const savedPct = parseInt(localStorage.getItem(`movie_pct_${movieId}`), 10) || 0;
   return savedTime > 10 || savedPct >= 1;
 }
 
-// Obtiene la última película que se estuvo viendo o Película 1 por defecto
 function getInitialHeroMovie() {
   const lastId = parseInt(localStorage.getItem('rincón_last_watched_id'), 10);
   if (lastId) {
@@ -216,9 +218,12 @@ document.addEventListener('keydown', (e) => {
 });
 
 // =========================================================================
-// 5. DETECCIÓN INSTANTÁNEA DEL SERVIDOR AL CARGAR LA WEB (SIN DAR PLAY)
+// 5. MONITOREO CONTINUO DEL SERVIDOR (EL AVISO SOLO SALE AL REPRODUCIR)
 // =========================================================================
 function setServerStatus(state) {
+  const previousState = currentServerState;
+  currentServerState = state;
+
   signalBadge.className = 'signal-pill';
   statusDot.className = 'signal-dot';
   statusPing.className = 'signal-ping';
@@ -228,47 +233,99 @@ function setServerStatus(state) {
     statusDot.classList.add('online');
     statusPing.classList.add('online');
     statusText.textContent = 'Servidor en línea';
+
+    // Ocultar el aviso del reproductor apenas vuelva la señal
     offlineOverlay.classList.remove('visible');
+
+    // Si estaba dentro del reproductor esperando conexión, reanudar automáticamente
+    if (previousState === 'offline' && !playerStage.classList.contains('hidden') && player.paused) {
+      const streamUrl = `${getServerUrl()}/video/${activeMovie.filename}`;
+      videoSource.src = streamUrl;
+      player.load();
+      player.play().catch(() => { });
+    }
   } else if (state === 'offline') {
     signalBadge.classList.add('offline');
     statusDot.classList.add('offline');
     statusPing.classList.add('offline');
     statusText.textContent = 'Servidor fuera de línea';
+
+    // SOLO mostrar el mensaje de desconexión si el usuario está en la pantalla de reproducción
+    if (!playerStage.classList.contains('hidden')) {
+      offlineOverlay.classList.add('visible');
+    }
   } else {
     statusText.textContent = 'Conectando...';
   }
 }
 
-// Valida al instante el servidor tanto por red como precargando el reproductor principal
-async function verifyServerInstantly(movie) {
-  setServerStatus('connecting');
-  const targetMovie = movie || activeMovie || movies[0];
-  const streamUrl = `${getServerUrl()}/video/${targetMovie.filename}`;
+function checkServerHealthNow() {
+  if (isCheckingServer) return;
 
-  // 1. Precargar en el reproductor real en segundo plano (como hacíamos en la primera versión)
-  if (videoSource.src !== streamUrl) {
-    videoSource.src = streamUrl;
-    player.load();
-  }
-
-  // 2. Verificación rápida de alcance por red al servidor para respuesta inmediata
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 4500);
-
-  try {
-    await fetch(streamUrl, {
-      method: 'HEAD',
-      mode: 'no-cors',
-      cache: 'no-store',
-      signal: controller.signal
-    });
-    clearTimeout(timeoutId);
+  if (!player.paused && !player.ended && player.readyState >= 2) {
     setServerStatus('online');
-  } catch (_) {
-    clearTimeout(timeoutId);
-    // Si falla el ping inicial, dejamos que el evento error/loadedmetadata del video confirme
+    return;
   }
+
+  isCheckingServer = true;
+  const targetMovie = activeMovie || movies[0];
+  const probeUrl = `${getServerUrl()}/video/${targetMovie.filename}?ping=${Date.now()}`;
+
+  const probeVideo = document.createElement('video');
+  probeVideo.preload = 'metadata';
+  probeVideo.muted = true;
+  probeVideo.playsInline = true;
+
+  let finished = false;
+  const cleanup = () => {
+    if (finished) return;
+    finished = true;
+    isCheckingServer = false;
+    probeVideo.removeAttribute('src');
+    probeVideo.load();
+  };
+
+  const timeoutId = setTimeout(() => {
+    if (!finished) {
+      cleanup();
+      setServerStatus('offline');
+    }
+  }, 4200);
+
+  probeVideo.onloadedmetadata = () => {
+    clearTimeout(timeoutId);
+    cleanup();
+    setServerStatus('online');
+  };
+
+  probeVideo.oncanplay = () => {
+    clearTimeout(timeoutId);
+    cleanup();
+    setServerStatus('online');
+  };
+
+  probeVideo.onerror = () => {
+    clearTimeout(timeoutId);
+    cleanup();
+    setServerStatus('offline');
+  };
+
+  probeVideo.src = probeUrl;
+  probeVideo.load();
 }
+
+function startContinuousServerPolling() {
+  checkServerHealthNow();
+  if (serverPollTimer) clearInterval(serverPollTimer);
+  serverPollTimer = setInterval(() => {
+    checkServerHealthNow();
+  }, 5000);
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) checkServerHealthNow();
+});
+window.addEventListener('online', checkServerHealthNow);
 
 // =========================================================================
 // 6. PORTADA HERO PRINCIPAL Y SALA DE REPRODUCCIÓN
@@ -322,29 +379,23 @@ function selectMovieForHero(movie, cardElement) {
   }
 }
 
-async function startPlaybackExperience(movie, startFromZero = false) {
+async function startPlaybackExperience(movie) {
   stopAllCardPreviews();
   activeMovie = movie;
 
-  // Guardar como la última película vista para que siempre aparezca hasta arriba
   localStorage.setItem('rincón_last_watched_id', movie.id);
-
-  if (startFromZero) {
-    localStorage.removeItem(`movie_time_${movie.id}`);
-    localStorage.removeItem(`movie_pct_${movie.id}`);
-    const bar = document.querySelector(`.movie-card[data-id="${movie.id}"] .progress-fill`);
-    if (bar) bar.style.width = '0%';
-  }
-
-  // Validar visibilidad del botón de reiniciar en el reproductor
-  restartPlayerBtn.classList.toggle('hidden', !hasMovieProgress(movie.id));
 
   heroStage.classList.add('hidden');
   playerStage.classList.remove('hidden');
   window.scrollTo({ top: 0, behavior: 'smooth' });
 
   playerTopTitle.textContent = movie.title;
-  offlineOverlay.classList.remove('visible');
+
+  if (currentServerState === 'offline') {
+    offlineOverlay.classList.add('visible');
+  } else {
+    offlineOverlay.classList.remove('visible');
+  }
 
   const streamUrl = `${getServerUrl()}/video/${movie.filename}`;
   if (videoSource.src !== streamUrl) {
@@ -362,10 +413,8 @@ async function startPlaybackExperience(movie, startFromZero = false) {
   const applyTimeAndPlay = () => {
     setServerStatus('online');
     durationEl.textContent = formatTime(player.duration);
-    if (!startFromZero && savedTime > 5 && savedTime < player.duration - 15) {
+    if (savedTime > 5 && savedTime < player.duration - 15) {
       player.currentTime = savedTime;
-    } else if (startFromZero) {
-      player.currentTime = 0;
     }
     player.play().catch(() => { });
   };
@@ -376,11 +425,12 @@ async function startPlaybackExperience(movie, startFromZero = false) {
     player.onloadedmetadata = applyTimeAndPlay;
   }
 
-  showControlsTemporarily();
+  showControlsTemporarily(true);
 }
 
 async function closePlayerToHero() {
   player.pause();
+  offlineOverlay.classList.remove('visible');
 
   if (isForcedLandscape) {
     disableForcedLandscape();
@@ -397,18 +447,17 @@ async function closePlayerToHero() {
   playerStage.classList.add('hidden');
   heroStage.classList.remove('hidden');
 
-  // Al salir de ver una película, se queda seleccionada hasta arriba en la Portada Hero
   const activeCard = document.querySelector(`.movie-card[data-id="${activeMovie.id}"]`);
   selectMovieForHero(activeMovie, activeCard);
 }
 
-heroPlayBtn.addEventListener('click', () => startPlaybackExperience(activeMovie, false));
+heroPlayBtn.addEventListener('click', () => startPlaybackExperience(activeMovie));
 heroInfoBtn.addEventListener('click', () => openSynopsisModal(activeMovie));
 backToHeroBtn.addEventListener('click', closePlayerToHero);
 offlineBackBtn.addEventListener('click', closePlayerToHero);
 
 // =========================================================================
-// 7. CONTROLES INFERIORES ÚNICOS, GESTOS Y DURACIÓN EXTENDIDA EN MÓVIL (8s)
+// 7. CONTROLES ESTABLES EN MÓVIL (10s SIN CIERRE PREMATURO) Y MOUSE EN WEB
 // =========================================================================
 function formatTime(seconds) {
   if (!seconds || isNaN(seconds)) return '00:00';
@@ -421,11 +470,17 @@ function formatTime(seconds) {
   return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
 }
 
-// En móvil dura 8 segundos completos para que dé tiempo de sobra; en laptop 3.5 segundos
-function showControlsTemporarily() {
+function showControlsTemporarily(markAsFreshTap = false) {
+  const wasHidden = !videoWrapper.classList.contains('show-controls');
   videoWrapper.classList.add('show-controls');
+
+  if (wasHidden || markAsFreshTap) {
+    controlsJustOpenedAt = Date.now();
+  }
+
   clearTimeout(controlsTimeout);
-  const hideDelay = isMobileDevice() ? 8000 : 3500;
+  // 10 segundos reales en móvil; 3.5 segundos en laptop cuando dejas quieto el mouse
+  const hideDelay = isMobileDevice() ? 10000 : 3500;
 
   if (!player.paused) {
     controlsTimeout = setTimeout(() => {
@@ -435,9 +490,21 @@ function showControlsTemporarily() {
   }
 }
 
-// Si el usuario toca cualquier parte de la barra inferior, reinicia los 8 segundos
-document.getElementById('customControls').addEventListener('pointerdown', () => {
-  showControlsTemporarily();
+// Mantener viva la interfaz mientras el dedo esté tocando cualquier control inferior o superior
+customControls.addEventListener('pointerdown', (e) => {
+  e.stopPropagation();
+  clearTimeout(controlsTimeout);
+  showControlsTemporarily(true);
+});
+
+customControls.addEventListener('pointerup', (e) => {
+  e.stopPropagation();
+  showControlsTemporarily(true);
+});
+
+playerTopBar.addEventListener('pointerdown', (e) => {
+  e.stopPropagation();
+  showControlsTemporarily(true);
 });
 
 function togglePlay() {
@@ -447,15 +514,17 @@ function togglePlay() {
   } else {
     player.pause();
   }
-  showControlsTemporarily();
+  showControlsTemporarily(true);
 }
 
 function updatePlayIcons() {
   bottomPlayIcon.className = player.paused ? 'fa-solid fa-play' : 'fa-solid fa-pause';
   if (player.paused) {
+    clearTimeout(controlsTimeout);
     videoWrapper.classList.add('show-controls');
   } else {
-    showControlsTemporarily();
+    // Respeta los 10 segundos completos al iniciar o reanudar en móvil
+    showControlsTemporarily(false);
   }
 }
 
@@ -472,20 +541,15 @@ player.addEventListener('canplay', () => {
 
 player.addEventListener('error', () => {
   setServerStatus('offline');
-  if (!playerStage.classList.contains('hidden')) {
-    offlineOverlay.classList.add('visible');
-  }
 });
 
 videoSource.addEventListener('error', () => {
   setServerStatus('offline');
-  if (!playerStage.classList.contains('hidden')) {
-    offlineOverlay.classList.add('visible');
-  }
 });
 
 retryBtn.addEventListener('click', () => {
-  startPlaybackExperience(activeMovie, false);
+  checkServerHealthNow();
+  startPlaybackExperience(activeMovie);
 });
 
 let lastTapTime = 0;
@@ -525,12 +589,14 @@ function getRelativeTapRatio(e, element) {
   return (e.clientX - rect.left) / rect.width;
 }
 
+// Manejo separado de Toque Táctil (Móvil) vs Clic (Laptop Web)
 gestureLayer.addEventListener('pointerup', (e) => {
   const now = Date.now();
   const ratioX = getRelativeTapRatio(e, gestureLayer);
   const isTouch = e.pointerType === 'touch' || isMobileDevice();
 
   if (now - lastTapTime < 300) {
+    // Doble tap o doble clic: adelantar / atrasar 10s
     clearTimeout(singleTapTimer);
     if (ratioX < 0.42) {
       skipSeconds(-10);
@@ -539,36 +605,63 @@ gestureLayer.addEventListener('pointerup', (e) => {
     } else {
       toggleFullscreen();
     }
-    showControlsTemporarily();
+    showControlsTemporarily(true);
   } else {
     singleTapTimer = setTimeout(() => {
       if (isTouch) {
+        // En móvil: si los controles están ocultos, los muestra por 10s completos
         if (!videoWrapper.classList.contains('show-controls')) {
-          showControlsTemporarily();
-        } else if (!player.paused) {
-          videoWrapper.classList.remove('show-controls');
+          showControlsTemporarily(true);
+        } else {
+          // Evita que se cierren por accidente si acaban de abrirse hace menos de 450ms
+          if (Date.now() - controlsJustOpenedAt > 450 && !player.paused) {
+            clearTimeout(controlsTimeout);
+            videoWrapper.classList.remove('show-controls');
+            volumeDrawer.classList.remove('expanded');
+          }
         }
       } else {
+        // En Laptop Web: clic pausa o reanuda
         togglePlay();
       }
-    }, 250);
+    }, 260);
   }
 
   lastTapTime = now;
 });
 
-videoWrapper.addEventListener('mousemove', () => {
-  showControlsTemporarily();
+// En Laptop Web: solo el movimiento real de mouse activa o apaga el temporizador
+videoWrapper.addEventListener('pointermove', (e) => {
+  if (e.pointerType !== 'mouse' || isMobileDevice()) return;
+  showControlsTemporarily(false);
 });
 
-bottomPlayBtn.addEventListener('click', togglePlay);
-bottomRewindBtn.addEventListener('click', () => { skipSeconds(-10); showControlsTemporarily(); });
-bottomForwardBtn.addEventListener('click', () => { skipSeconds(10); showControlsTemporarily(); });
+videoWrapper.addEventListener('pointerleave', (e) => {
+  if (e.pointerType !== 'mouse' || isMobileDevice()) return;
+  if (!player.paused) {
+    clearTimeout(controlsTimeout);
+    controlsTimeout = setTimeout(() => {
+      videoWrapper.classList.remove('show-controls');
+      volumeDrawer.classList.remove('expanded');
+    }, 1200);
+  }
+});
 
-restartPlayerBtn.addEventListener('click', () => {
-  player.currentTime = 0;
-  player.play().catch(() => { });
-  showControlsTemporarily();
+bottomPlayBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  togglePlay();
+});
+
+bottomRewindBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  skipSeconds(-10);
+  showControlsTemporarily(true);
+});
+
+bottomForwardBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  skipSeconds(10);
+  showControlsTemporarily(true);
 });
 
 // =========================================================================
@@ -590,8 +683,6 @@ player.addEventListener('timeupdate', () => {
 
     const bar = document.querySelector(`.movie-card[data-id="${activeMovie.id}"] .progress-fill`);
     if (bar) bar.style.width = `${roundedPct}%`;
-
-    restartPlayerBtn.classList.remove('hidden');
   }
 });
 
@@ -629,7 +720,7 @@ timelineContainer.addEventListener('pointermove', (e) => {
   updateSceneThumbnailPreview(e);
   if (isScrubbing && player.duration) {
     player.currentTime = getTimelineRatio(e) * player.duration;
-    showControlsTemporarily();
+    showControlsTemporarily(true);
   }
 });
 
@@ -640,18 +731,20 @@ timelineContainer.addEventListener('pointerleave', () => {
 });
 
 timelineContainer.addEventListener('pointerdown', (e) => {
+  e.stopPropagation();
   isScrubbing = true;
   updateSceneThumbnailPreview(e);
   if (player.duration) {
     player.currentTime = getTimelineRatio(e) * player.duration;
   }
-  showControlsTemporarily();
+  showControlsTemporarily(true);
 });
 
 window.addEventListener('pointerup', () => {
   if (isScrubbing) {
     isScrubbing = false;
     scenePreviewBox.classList.remove('visible');
+    showControlsTemporarily(true);
   }
 });
 
@@ -659,19 +752,20 @@ muteBtn.addEventListener('click', (e) => {
   e.stopPropagation();
   if (isMobileDevice() && !volumeDrawer.classList.contains('expanded')) {
     volumeDrawer.classList.add('expanded');
-    showControlsTemporarily();
+    showControlsTemporarily(true);
     return;
   }
   player.muted = !player.muted;
   volumeIcon.className = player.muted ? 'fa-solid fa-volume-xmark' : 'fa-solid fa-volume-high';
-  showControlsTemporarily();
+  showControlsTemporarily(true);
 });
 
 volumeSlider.addEventListener('input', (e) => {
+  e.stopPropagation();
   player.volume = parseFloat(e.target.value);
   player.muted = player.volume === 0;
   volumeIcon.className = player.muted ? 'fa-solid fa-volume-xmark' : 'fa-solid fa-volume-high';
-  showControlsTemporarily();
+  showControlsTemporarily(true);
 });
 
 async function enterFullscreenAndRotate() {
@@ -718,6 +812,7 @@ async function toggleFullscreen() {
       try { screen.orientation.unlock(); } catch (_) { }
     }
   }
+  showControlsTemporarily(true);
 }
 
 function enableForcedLandscape() {
@@ -734,7 +829,10 @@ function disableForcedLandscape() {
   fullscreenIcon.className = 'fa-solid fa-expand';
 }
 
-fullscreenBtn.addEventListener('click', toggleFullscreen);
+fullscreenBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  toggleFullscreen();
+});
 
 document.addEventListener('fullscreenchange', () => {
   const isFull = !!document.fullscreenElement;
@@ -742,7 +840,7 @@ document.addEventListener('fullscreenchange', () => {
 });
 
 // =========================================================================
-// 9. MODAL DE SINOPSIS (OCULTA "REINICIAR DESDE CERO" SI NO SE HA VISTO)
+// 9. MODAL DE SINOPSIS
 // =========================================================================
 function openSynopsisModal(movie) {
   modalMovie = movie;
@@ -767,9 +865,6 @@ function openSynopsisModal(movie) {
 
   modalPlayBtnText.textContent = started ? 'Continuar película' : 'Ver película ahora';
 
-  // Solo muestra el botón de "Reiniciar desde cero" si la película ya fue empezada
-  modalRestartBtn.classList.toggle('hidden', !started);
-
   synopsisModal.classList.add('open');
 }
 
@@ -785,17 +880,11 @@ synopsisModal.addEventListener('click', (e) => {
 modalPlayBtn.addEventListener('click', () => {
   if (!modalMovie) return;
   closeSynopsisModal();
-  startPlaybackExperience(modalMovie, false);
-});
-
-modalRestartBtn.addEventListener('click', () => {
-  if (!modalMovie) return;
-  closeSynopsisModal();
-  startPlaybackExperience(modalMovie, true);
+  startPlaybackExperience(modalMovie);
 });
 
 // =========================================================================
-// 10. RENDERIZADO DE LA CARTELERA G&V ❤️ (CON SALTO DE LÍNEA EN META)
+// 10. RENDERIZADO DE LA CARTELERA G&V ❤️
 // =========================================================================
 let hoverPreviewTimer = null;
 
@@ -904,14 +993,14 @@ function renderMovies() {
     hoverPlayBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       selectMovieForHero(movie, card);
-      startPlaybackExperience(movie, false);
+      startPlaybackExperience(movie);
     });
 
     card.addEventListener('click', () => {
       localStorage.setItem('rincón_last_watched_id', movie.id);
       selectMovieForHero(movie, card);
       if (!playerStage.classList.contains('hidden')) {
-        startPlaybackExperience(movie, false);
+        startPlaybackExperience(movie);
       } else {
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
@@ -920,12 +1009,10 @@ function renderMovies() {
     moviesList.appendChild(card);
   });
 
-  // Mostrar hasta arriba la última película vista (o Película 1 si es la primera vez)
   const initialCard = document.querySelector(`.movie-card[data-id="${initialHeroMovie.id}"]`);
   selectMovieForHero(initialHeroMovie, initialCard);
 
-  // Verificar servidor al instante sin esperar a que den Play
-  verifyServerInstantly(initialHeroMovie);
+  startContinuousServerPolling();
 }
 
 // =========================================================================
@@ -958,7 +1045,6 @@ secretOwnerTrigger.addEventListener('click', () => {
   }
 });
 
-// Atajo en Laptop para ti: Alt + S abre la consola de servidor
 document.addEventListener('keydown', (e) => {
   if (e.altKey && (e.key === 's' || e.key === 'S')) {
     e.preventDefault();
@@ -985,12 +1071,12 @@ saveServerBtn.addEventListener('click', () => {
 
   localStorage.setItem('rincón_server_url', rawUrl);
   saveFeedback.textContent = '✓ Servidor sincronizado.';
-  verifyServerInstantly(activeMovie);
+  checkServerHealthNow();
 
   setTimeout(() => {
     closeOwnerConsole();
     if (!playerStage.classList.contains('hidden')) {
-      startPlaybackExperience(activeMovie, false);
+      startPlaybackExperience(activeMovie);
     }
   }, 500);
 });
@@ -999,7 +1085,7 @@ resetServerBtn.addEventListener('click', () => {
   localStorage.removeItem('rincón_server_url');
   serverUrlInput.value = DEFAULT_SERVER_URL;
   saveFeedback.textContent = '✓ Restaurado al servidor por defecto.';
-  verifyServerInstantly(activeMovie);
+  checkServerHealthNow();
 });
 
 renderMovies();

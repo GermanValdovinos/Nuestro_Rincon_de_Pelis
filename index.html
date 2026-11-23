@@ -6,22 +6,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Nuestro Rincón de Pelis ❤️</title>
 
-  <!-- ===================================================================
-       FAVICONS Y FORMATOS PARA TODOS LOS DISPOSITIVOS (iOS, Android, Web)
-       =================================================================== -->
+  <!-- Favicon y Meta Tags para todos los dispositivos usando img/faviconpelis.png (512x512) -->
   <meta name="theme-color" content="#07090e">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Rincón de Pelis">
-  <!-- Favicon Vectorial Integrado (Funciona al instante en cualquier navegador) -->
-  <link rel="icon" type="image/svg+xml"
-    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23e50914'/%3E%3Cstop offset='100%25' stop-color='%238b0008'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='url(%23g)'/%3E%3Cpath d='M25 19.5v25l21-12.5-21-12.5z' fill='%23ffffff'/%3E%3C/svg%3E">
-  <!-- Formatos adicionales por si deseas colocar tus archivos en la carpeta img/ -->
-  <link rel="icon" type="image/png" sizes="32x32" href="img/favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="img/favicon-16x16.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="img/apple-touch-icon.png">
-  <link rel="icon" type="image/png" sizes="192x192" href="img/android-chrome-192x192.png">
-  <link rel="icon" type="image/png" sizes="512x512" href="img/android-chrome-512x512.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="img/faviconpelis.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="img/faviconpelis.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="img/faviconpelis.png">
+  <link rel="apple-touch-icon" href="img/faviconpelis.png">
 
   <!-- Fuentes e Iconos -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -38,10 +31,12 @@
   <!-- Resplandor ambiental dinámico de fondo -->
   <div class="ambient-glow" id="ambientGlow"></div>
 
-  <!-- Barra Superior Limpia -->
+  <!-- Barra Superior con tu Logo -->
   <header class="navbar">
     <div class="nav-brand">
-      <span class="brand-icon"><i class="fa-solid fa-film"></i></span>
+      <span class="brand-icon">
+        <img src="img/faviconpelis.png" alt="Logo Nuestro Rincón de Pelis">
+      </span>
       <h1>NUESTRO RINCÓN DE PELIS <span class="heart">❤️</span></h1>
     </div>
 
@@ -61,15 +56,13 @@
   <main class="main-container">
 
     <!-- ===================================================================
-         1. GRAN PORTADA HERO ESTILO NETFLIX (CUBRE MÁS PANTALLA Y LIBRE DE BLOQUEOS)
+         1. GRAN PORTADA HERO ESTILO NETFLIX
          =================================================================== -->
     <section class="hero-stage" id="heroStage">
       <div class="hero-card" id="heroCard">
-        <!-- Imagen de fondo de la película activa -->
         <div class="hero-backdrop" id="heroBackdrop"></div>
         <div class="hero-vignette"></div>
 
-        <!-- Contenido de la Portada -->
         <div class="hero-content">
           <div class="hero-tags" id="heroTags">
             <span class="tag-pill quality" id="heroQuality">FULL HD</span>
@@ -84,11 +77,10 @@
           <h2 class="hero-title" id="heroTitle">Los Juegos del Hambre</h2>
           <p class="hero-desc" id="heroDesc"></p>
 
-          <!-- Botones estilo Netflix -->
           <div class="hero-buttons">
             <button class="btn-netflix-play" id="heroPlayBtn">
               <i class="fa-solid fa-play"></i>
-              <span id="heroPlayText">Reproducir película</span>
+              <span id="heroPlayText">Ver película</span>
             </button>
 
             <button class="btn-netflix-info" id="heroInfoBtn">
@@ -97,36 +89,32 @@
             </button>
           </div>
 
-          <!-- Indicador si ya tiene progreso guardado -->
           <div class="hero-resume-bar" id="heroResumeBar">
             <div class="resume-track">
               <div class="resume-fill" id="heroResumeFill"></div>
             </div>
-            <span class="resume-text" id="heroResumeText">Continuar viendo</span>
+            <span class="resume-text" id="heroResumeText">Progreso guardado</span>
           </div>
         </div>
 
-        <!-- Etiqueta de esquina estilo Netflix -->
         <div class="hero-corner-mood">
           <i class="fa-solid fa-heart"></i>
-          <span>Función privada G&V</span>
+          <span>Pelicula recomendada G&V</span>
         </div>
       </div>
     </section>
 
     <!-- ===================================================================
-         2. SALA DE REPRODUCCIÓN (EL AVISO DE SERVIDOR SOLO APARECE AQUÍ)
+         2. SALA DE REPRODUCCIÓN
          =================================================================== -->
     <section class="player-stage hidden" id="playerStage">
       <div class="video-wrapper show-controls" id="videoWrapper">
 
-        <!-- Video Principal -->
         <video id="mainPlayer" preload="metadata" playsinline controlsList="nodownload nofullscreen noremoteplayback"
           disablePictureInPicture oncontextmenu="return false;">
           <source id="videoSource" src="" type="video/mp4">
         </video>
 
-        <!-- Barra Superior Interna del Reproductor (Flecha Atrás + Título) -->
         <div class="player-top-bar" id="playerTopBar">
           <button class="btn-back-arrow" id="backToHeroBtn" title="Volver a la portada">
             <i class="fa-solid fa-arrow-left"></i>
@@ -137,7 +125,6 @@
           </div>
         </div>
 
-        <!-- Capa Interactiva (Tap en Móvil mantiene controles 10s reales / Clic en Laptop pausa / Doble toque ±10s) -->
         <div class="gesture-layer" id="gestureLayer">
           <div class="skip-ripple left" id="rippleLeft">
             <div class="skip-icon">
@@ -154,10 +141,7 @@
           </div>
         </div>
 
-        <!-- Barra de Controles Inferior (Controles alineados abajo a la izquierda) -->
         <div class="custom-controls" id="customControls">
-
-          <!-- Línea de Tiempo con Miniatura de Escena Flotante -->
           <div class="timeline-container" id="timelineContainer">
             <div class="scene-preview-box" id="scenePreviewBox">
               <div class="scene-thumb-frame">
@@ -173,27 +157,22 @@
             </div>
           </div>
 
-          <!-- Botones de Control Inferiores -->
           <div class="controls-row">
             <div class="controls-left">
-              <!-- Play / Pausa -->
               <button class="ctrl-btn" id="bottomPlayBtn" title="Reproducir / Pausar">
                 <i class="fa-solid fa-play" id="bottomPlayIcon"></i>
               </button>
 
-              <!-- Retroceder 10s -->
               <button class="ctrl-btn skip-ten-btn" id="bottomRewindBtn" title="Retroceder 10 segundos">
                 <i class="fa-solid fa-rotate-left"></i>
                 <span class="ten-label">10</span>
               </button>
 
-              <!-- Adelantar 10s -->
               <button class="ctrl-btn skip-ten-btn" id="bottomForwardBtn" title="Adelantar 10 segundos">
                 <i class="fa-solid fa-rotate-right"></i>
                 <span class="ten-label">10</span>
               </button>
 
-              <!-- Volumen Desplegable al Pasar el Mouse o Dar Tap -->
               <div class="volume-drawer" id="volumeDrawer">
                 <button class="ctrl-btn" id="muteBtn" title="Volumen / Silenciar">
                   <i class="fa-solid fa-volume-high" id="volumeIcon"></i>
@@ -203,7 +182,6 @@
                 </div>
               </div>
 
-              <!-- Tiempo Actual / Duración -->
               <div class="time-display">
                 <span id="currentTimeEl">00:00</span>
                 <span class="time-sep">/</span>
@@ -219,7 +197,7 @@
           </div>
         </div>
 
-        <!-- Pantalla cuando el Servidor Multimedia está Fuera de Línea (Solo al reproducir) -->
+        <!-- Pantalla de Servidor Fuera de Línea (Solo al reproducir) -->
         <div class="offline-overlay" id="offlineOverlay">
           <div class="offline-card">
             <div class="offline-radar">
@@ -298,7 +276,11 @@
           <div class="modal-actions">
             <button class="btn-netflix-play" id="modalPlayBtn">
               <i class="fa-solid fa-play"></i>
-              <span id="modalPlayBtnText">Ver película ahora</span>
+              <span id="modalPlayBtnText">Ver película</span>
+            </button>
+            <!-- Aparece automáticamente solo si la película ya tiene avance -->
+            <button class="btn-modal-restart hidden" id="modalRestartBtn">
+              <i class="fa-solid fa-rotate-left"></i> Reiniciar desde cero
             </button>
           </div>
         </div>
@@ -307,7 +289,7 @@
   </div>
 
   <!-- ===================================================================
-       5. CONSOLA PROPIETARIA OCULTA (SE ABRE CON 5 TOQUES EN "BRØKØ_03 🥦")
+       5. CONSOLA PROPIETARIA OCULTA (5 TOQUES EN "BRØKØ_03 🥦" O ALT + S)
        =================================================================== -->
   <div class="owner-modal-backdrop" id="ownerModal">
     <div class="owner-modal-card">

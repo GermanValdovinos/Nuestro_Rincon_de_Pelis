@@ -44,13 +44,13 @@ body {
 }
 
 /* =========================================================================
-   BARRA SUPERIOR LIMPIA Y ESTADO DEL SERVIDOR EN TIEMPO REAL
+   BARRA SUPERIOR CON TU LOGO CLAQUETA
    ========================================================================= */
 .navbar {
   position: sticky;
   top: 0;
   z-index: 100;
-  padding: 15px 3.5vw;
+  padding: 14px 3.5vw;
   background: rgba(7, 9, 14, 0.85);
   backdrop-filter: blur(18px);
   border-bottom: 1px solid var(--border-color);
@@ -66,16 +66,23 @@ body {
 }
 
 .brand-icon {
-  width: 36px;
-  height: 36px;
+  width: 38px;
+  height: 38px;
   border-radius: 10px;
-  background: linear-gradient(135deg, #e50914, #99060d);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
-  font-size: 1rem;
-  box-shadow: 0 4px 15px rgba(229, 9, 20, 0.35);
+  padding: 5px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+}
+
+.brand-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
 }
 
 .navbar h1 {
@@ -197,7 +204,7 @@ body {
 }
 
 /* =========================================================================
-   1. PORTADA HERO MÁS GRANDE (CUBRE MÁS PANTALLA EN LAPTOP Y MÓVIL)
+   1. PORTADA HERO ESTILO NETFLIX
    ========================================================================= */
 .hero-stage {
   width: 100%;
@@ -431,13 +438,19 @@ body {
   aspect-ratio: 16 / 9;
   max-height: 84vh;
   background-color: #000;
-  border-radius: 22px;
+  border-radius: 26px;
   border: 1px solid rgba(255, 255, 255, 0.12);
   box-shadow: 0 28px 65px rgba(0, 0, 0, 0.85);
   user-select: none;
   -webkit-user-select: none;
   overflow: hidden;
   cursor: none;
+}
+
+/* En web mantiene las mismas proporciones que la portada Hero (78vh) cuando el servidor está caído */
+.video-wrapper.is-offline:not(:fullscreen):not(.forced-landscape) {
+  aspect-ratio: auto;
+  min-height: 78vh;
 }
 
 .video-wrapper.show-controls {
@@ -453,7 +466,6 @@ body {
   border: none;
 }
 
-/* Rotación Horizontal Forzada en Móviles si el giro nativo está bloqueado */
 .video-wrapper.forced-landscape {
   position: fixed !important;
   top: 50% !important;
@@ -480,7 +492,6 @@ video#mainPlayer {
   pointer-events: none;
 }
 
-/* Sombreado suave superior e inferior cuando los controles están activos */
 .video-wrapper::after {
   content: '';
   position: absolute;
@@ -500,7 +511,6 @@ video#mainPlayer {
   opacity: 1;
 }
 
-/* Barra Superior del Reproductor con Flecha Hacia Atrás */
 .player-top-bar {
   position: absolute;
   top: 0;
@@ -564,7 +574,6 @@ video#mainPlayer {
   color: #fff;
 }
 
-/* Capa de Gestos y Doble Toque / Doble Clic */
 .gesture-layer {
   position: absolute;
   inset: 0;
@@ -617,7 +626,6 @@ video#mainPlayer {
   color: var(--accent);
 }
 
-/* Barra Inferior del Reproductor */
 .custom-controls {
   position: absolute;
   left: 0;
@@ -635,7 +643,6 @@ video#mainPlayer {
   pointer-events: auto;
 }
 
-/* Línea de Tiempo + Miniatura Flotante de Escena */
 .timeline-container {
   position: relative;
   width: 100%;
@@ -739,7 +746,6 @@ video#mainPlayer {
   box-shadow: 0 0 12px rgba(229, 9, 20, 0.95);
 }
 
-/* Botones de la Barra Inferior (Alineados a la izquierda) */
 .controls-row {
   display: flex;
   align-items: center;
@@ -783,7 +789,6 @@ video#mainPlayer {
   margin-top: 2px;
 }
 
-/* Volumen Desplegable al Pasar el Mouse o Dar Tap */
 .volume-drawer {
   display: flex;
   align-items: center;
@@ -974,7 +979,7 @@ video#mainPlayer {
 }
 
 /* =========================================================================
-   3. CATÁLOGO DE PELÍCULAS (CON SALTO DE LÍNEA EN AÑO Y DURACIÓN)
+   3. CATÁLOGO DE PELÍCULAS
    ========================================================================= */
 .catalog-header {
   display: flex;
@@ -1214,7 +1219,7 @@ video#mainPlayer {
 }
 
 /* =========================================================================
-   4. MODAL ANIMADO DE SINOPSIS Y DETALLES COMPLETOS
+   4. MODAL ANIMADO DE SINOPSIS Y BOTÓN REINICIAR DESDE CERO
    ========================================================================= */
 .synopsis-modal-backdrop {
   position: fixed;
@@ -1383,6 +1388,28 @@ video#mainPlayer {
   gap: 12px;
   margin-top: 6px;
   flex-wrap: wrap;
+}
+
+.btn-modal-restart {
+  background: rgba(255, 255, 255, 0.07);
+  color: #e5e7eb;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  padding: 14px 22px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.btn-modal-restart:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  transform: scale(1.03);
 }
 
 /* =========================================================================
@@ -1573,15 +1600,21 @@ video#mainPlayer {
 }
 
 /* =========================================================================
-   ADAPTACIÓN MÓVIL (PORTADA HERO MÁS GRANDE Y CONTROLES ESTABLES)
+   ADAPTACIÓN MÓVIL (PORTADA HERO A 73vh Y ALERTA OFFLINE COMPACTA)
    ========================================================================= */
 @media (max-width: 768px) {
   .navbar {
-    padding: 13px 16px;
+    padding: 12px 16px;
+  }
+
+  .brand-icon {
+    width: 34px;
+    height: 34px;
+    padding: 4px;
   }
 
   .navbar h1 {
-    font-size: 0.96rem;
+    font-size: 0.95rem;
   }
 
   .signal-label {
@@ -1595,13 +1628,13 @@ video#mainPlayer {
   .main-container {
     width: 94%;
     margin-top: 12px;
-    gap: 32px;
+    gap: 26px;
   }
 
-  /* Portada Hero Más Grande en Móvil (Cubre 82% de la altura de pantalla) */
+  /* Portada Hero a 73vh para que apenas asome "Nuestra Cartelera G&V ❤️" */
   .hero-card {
-    min-height: 82vh;
-    padding: 30px 22px;
+    min-height: 73vh;
+    padding: 26px 20px;
     text-align: center;
     justify-content: center;
   }
@@ -1612,27 +1645,28 @@ video#mainPlayer {
 
   .hero-vignette {
     background: linear-gradient(180deg,
-        rgba(7, 9, 14, 0.05) 0%,
-        rgba(7, 9, 14, 0.38) 50%,
+        rgba(7, 9, 14, 0.06) 0%,
+        rgba(7, 9, 14, 0.42) 50%,
         rgba(7, 9, 14, 0.98) 100%);
   }
 
   .hero-content {
     align-items: center;
     width: 100%;
+    gap: 10px;
   }
 
   .hero-tags {
     justify-content: center;
-    font-size: 0.82rem;
+    font-size: 0.8rem;
   }
 
   .hero-genre-line {
-    font-size: 0.82rem;
+    font-size: 0.8rem;
   }
 
   .hero-title {
-    font-size: 2.15rem;
+    font-size: 1.95rem;
   }
 
   .hero-desc {
@@ -1642,21 +1676,51 @@ video#mainPlayer {
   .hero-buttons {
     flex-direction: column;
     width: 100%;
-    gap: 10px;
+    gap: 9px;
+    margin-top: 4px;
   }
 
   .btn-netflix-play,
   .btn-netflix-info {
     width: 100%;
     border-radius: 12px;
-    padding: 15px 18px;
+    padding: 13px 18px;
+    font-size: 0.95rem;
   }
 
   .hero-corner-mood {
     display: none;
   }
 
-  /* Controles inferiores más cómodos al tacto en móvil */
+  /* Ajuste compacto de la alerta de servidor apagado en móvil */
+  .video-wrapper.is-offline:not(:fullscreen):not(.forced-landscape) {
+    min-height: 390px;
+  }
+
+  .offline-overlay {
+    padding: 16px;
+  }
+
+  .offline-card {
+    padding: 24px 18px;
+  }
+
+  .offline-radar {
+    width: 58px;
+    height: 58px;
+    font-size: 1.35rem;
+    margin-bottom: 14px;
+  }
+
+  .offline-card h3 {
+    font-size: 1.25rem;
+  }
+
+  .offline-card p {
+    font-size: 0.85rem;
+    margin-bottom: 18px;
+  }
+
   .custom-controls {
     padding: 18px 18px 16px;
   }
@@ -1667,7 +1731,6 @@ video#mainPlayer {
     font-size: 1.45rem;
   }
 
-  /* Catálogo Móvil */
   .movies-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 14px;
@@ -1677,14 +1740,13 @@ video#mainPlayer {
     display: none;
   }
 
-  /* Modal en Móvil */
   .modal-layout {
     grid-template-columns: 1fr;
     gap: 18px;
   }
 
   .modal-poster-wrap {
-    width: 155px;
+    width: 150px;
     margin: 0 auto;
   }
 
@@ -1698,7 +1760,8 @@ video#mainPlayer {
     justify-content: center;
   }
 
-  .modal-actions .btn-netflix-play {
+  .modal-actions .btn-netflix-play,
+  .modal-actions .btn-modal-restart {
     width: 100%;
     justify-content: center;
   }
